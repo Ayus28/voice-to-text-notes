@@ -11,7 +11,7 @@ st.subheader("Camera ke neeche phone rakh kar points dekhein")
 # Gemini Key Setup
 try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    # Google ka sabse naya stable model jo text input ko perfect support karta hai
+    # Hum generalized safe model access use kar rahe hain
     model = genai.GenerativeModel('gemini-2.5-flash')
 except Exception as e:
     st.error("API Key missing in Settings.")
@@ -23,14 +23,15 @@ Projects: E-commerce Backend API, Student Management System
 """
 
 SYSTEM_PROMPT = f"""
-You are an interview assistant. Provide ONLY 3 short bullet points (max 6 words per point) based on the question.
+You are an interview assistant. Provide ONLY 3 short bullet points (max 6 words per point) answering the question based on the candidate's context. 
+Do not include any introductory text, titles, or formatting other than 3 clean bullet points.
 Context: {CONTEXT}
 """
 
 st.write("---")
 
-# Text input box for mobile voice typing
-question = st.text_input("Interviewer ka sawaal yahan likhein ya paste karein (ya voice typing keyboard ka use karein):")
+# AUTOMATIC TRIGGER: Isme text aate hi app refresh hokar answer nikalega
+question = st.text_input("Interviewer ka sawaal yahan bolein:")
 
 if question:
     with st.spinner("AI is thinking..."):
@@ -38,6 +39,8 @@ if question:
             response = model.generate_content(f"{SYSTEM_PROMPT}\nQuestion: {question}")
             st.write("---")
             st.markdown("<h3 style='color: #00FF00;'>💡 Interview Hints:</h3>", unsafe_allow_html=True)
-            st.markdown(f"<div style='font-size:24px; font-weight:bold; color:white;'>{response.text}</div>", unsafe_allow_html=True)
+            
+            # Response ko saaf-saaf bade text mein dikhane ke liye
+            st.markdown(f"<div style='font-size:24px; font-weight:bold; color:white; line-height:1.8;'>{response.text}</div>", unsafe_allow_html=True)
         except Exception as e:
             st.error(f"Error: {e}")
