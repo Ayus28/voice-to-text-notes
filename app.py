@@ -15,6 +15,7 @@ try:
 except Exception as e:
     st.error("API Key missing in Settings.")
 
+# Context aur Skills (Ise apne hisab se change kar sakte hain)
 CONTEXT = """
 Role: Python Developer
 Skills: Django, FastAPI, PostgreSQL, AWS, Git
@@ -22,45 +23,28 @@ Projects: E-commerce Backend API, Student Management System
 """
 
 SYSTEM_PROMPT = f"""
-You are an interview assistant. Provide ONLY 3 short bullet points (max 6 words per point) based on the question.
-Context: {CONTEXT}
+You are an interview assistant. Based on the interview question or topic in the audio, provide the user with clear answers.
+Provide ONLY 3 short bullet points (max 6 words per point). No introductory or concluding remarks.
+Context:
+{CONTEXT}
 """
 
-# HTML5 Web Speech API (Yeh sidha browser ka mic use karega bina kisi library ke)
-st.markdown("""
-    <script>
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.lang = 'en-US';
-    recognition.continuous = true;
-    recognition.interimResults = false;
+st.write("---")
+# Streamlit ka official audio input handler (Sabse reliable feature)
+audio_file = st.audio_input("Neeche diye gaye mic icon par click karein aur bolna shuru karein:")
 
-    recognition.onresult = function(event) {
-        const lastResult = event.results[event.results.length - 1][0].transcript;
-        // Streamlit ko live text bhejna
-        const queryString = window.location.search;
-        const urlParams = new URLSearchParams(queryString);
-        window.parent.postMessage({type: 'streamlit:setComponentValue', value: lastResult}, '*');
-    };
-
-    recognition.onerror = function(event) {
-        console.error("Speech recognition error", event.error);
-    };
-
-    // Automatically start listening on page load
-    window.addEventListener('load', () => {
-        recognition.start();
-    });
-    </script>
-""", unsafe_allow_html=True)
-
-# Live input box jo automatic update hoga
-question = st.text_input("Live Interview Question Detected:", key="voice_input")
-
-if question:
-    st.write(f"**Interviewer Asked:** *{question}*")
-    st.write("---")
-    try:
-        response = model.generate_content(f"{SYSTEM_PROMPT}\nQuestion: {question}")
-        st.markdown(f"<div style='font-size:24px; font-weight:bold; color:#00FF00;'>{response.text}</div>", unsafe_allow_html=True)
-    except Exception as e:
-        st.write("Processing...")
+if audio_file is not None:
+    with st.spinner("Processing your audio with AI..."):
+        try:
+            # Direct audio chunks ko Gemini ke pass analyze hone ke liye bhejna
+            audio_bytes = audio_file.read()
+            response = model.generate_content([
+                f"{SYSTEM_PROMPT}\nAnalyze this audio clip and provide the 3 short bullet points directly.",
+                {"mime_type": "audio/wav", "data": audio_bytes}
+            ])
+            
+            st.write("---")
+            st.markdown("<h3 style='color: #00FF00;'>💡 Interview Hints:</h3>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size:24px; font-weight:bold; color:white; line-height: 1.6;'>{response.text}</div>", unsafe_allow_html=True)
+        except Exception as e:
+            st.error(f"Error processing audio: {e}")
