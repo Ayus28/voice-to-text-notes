@@ -11,8 +11,8 @@ st.subheader("Camera ke neeche phone rakh kar points dekhein")
 # Gemini Key Setup
 try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    # Hum 'gemini-pro' use kar rahe hain kyunki text input ispe bina kisi error ke chalta hai
-    model = genai.GenerativeModel('gemini-pro')
+    # Google ka sabse naya stable model jo text input ko perfect support karta hai
+    model = genai.GenerativeModel('gemini-2.5-flash')
 except Exception as e:
     st.error("API Key missing in Settings.")
 
