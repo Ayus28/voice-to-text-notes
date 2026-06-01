@@ -11,8 +11,8 @@ st.subheader("Camera ke neeche phone rakh kar points dekhein")
 # Gemini Key Setup
 try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    # Hum standard legacy model ya flash ko generalized content mapping se call karenge
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    # Hum 'gemini-pro' use kar rahe hain kyunki text input ispe bina kisi error ke chalta hai
+    model = genai.GenerativeModel('gemini-pro')
 except Exception as e:
     st.error("API Key missing in Settings.")
 
@@ -29,7 +29,7 @@ Context: {CONTEXT}
 
 st.write("---")
 
-# Audio input se break lekar text query engine use karte hain jo bug-free hai
+# Text input box for mobile voice typing
 question = st.text_input("Interviewer ka sawaal yahan likhein ya paste karein (ya voice typing keyboard ka use karein):")
 
 if question:
