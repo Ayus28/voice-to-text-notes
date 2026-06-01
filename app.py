@@ -1,8 +1,5 @@
 import streamlit as st
-import speech_recognition as sr
 import google.generativeai as genai
-import threading
-import queue
 
 # Page Configuration (Bada text aur dark mode ke liye)
 st.set_page_config(page_title="AI Interview Assistant", layout="centered")
@@ -16,9 +13,9 @@ try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     model = genai.GenerativeModel('gemini-pro')
 except Exception as e:
-    st.error("API Key not set up yet in Advanced Settings.")
+    st.error("API Key settings mein sahi se nahi daali gayi hai.")
 
-# Aapka Resume aur Context (Ise aap baad mein edit kar sakte hain)
+# Aapka Resume aur Context
 CONTEXT = """
 Role: Python Developer
 Skills: Django, FastAPI, PostgreSQL, AWS, Git
@@ -33,39 +30,20 @@ Context:
 {CONTEXT}
 """
 
-# Audio processing ke liye queue
-if 'queue' not in st.session_state:
-    st.session_state.queue = queue.Queue()
+# NEW BUTTON: Yeh line phone mein microphone icon dikhayegi aur permission mangegi
+audio_file = st.audio_input("Interview ke time is Mic icon par click karke chhod dein")
 
-def listen_audio():
-    recognizer = sr.Recognizer()
-    with sr.Microphone() as source:
-        recognizer.adjust_for_ambient_noise(source, duration=1)
-        while True:
-            try:
-                audio = recognizer.listen(source, phrase_time_limit=7)
-                text = recognizer.recognize_google(audio)
-                st.session_state.queue.put(text)
-            except:
-                pass
-
-# Background thread shuru karna jo phone ka mic on rakhega
-if 'started' not in st.session_state:
-    st.session_state.started = True
-    threading.Thread(target=listen_audio, daemon=True).start()
-
-# UI display area
-placeholder = st.empty()
-
-while True:
-    if not st.session_state.queue.empty():
-        question = st.session_state.queue.get()
-        with placeholder.container():
-            st.write(f"**Interviewer Asked:** *{question}*")
-            st.write("---")
-            
-            try:
-                response = model.generate_content(f"{SYSTEM_PROMPT}\nQuestion: {question}")
-                st.markdown(f"<div style='font-size:24px; font-weight:bold; color:#00FF00;'>{response.text}</div>", unsafe_allow_html=True)
-            except Exception as e:
-                st.write("Processing...")
+if audio_file is not None:
+    st.write("Processing audio...")
+    try:
+        # Audio ko text mein badalna aur Gemini se answer lena
+        # Streamlit ka naya feature direct audio file ko process kar sakta hai
+        response = model.generate_content([
+            f"{SYSTEM_PROMPT}\nListen to this audio and give 3 short bullet points based on the interview question/topic.",
+            {"mime_type": "audio/wav", "data": audio_file.read()}
+        ])
+        
+        st.write("---")
+        st.markdown(f"<div style='font-size:24px; font-weight:bold; color:#00FF00;'>{response.text}</div>", unsafe_allow_html=True)
+    except Exception as e:
+        st.write("Aawaaz saaf nahi thi, ya API key ka issue hai. Kripya dobara bolein.")
