@@ -11,7 +11,7 @@ st.subheader("Camera ke neeche phone rakh kar points dekhein")
 # Gemini Setup - Flash Model Version
 try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel(model_name='models/gemini-1.5-flash-latest')
 except Exception as e:
     st.error("API Key missing in Settings.")
 
